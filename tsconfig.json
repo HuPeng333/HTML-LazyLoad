@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "module": "system",
+        "strict": true,
+        "outDir": "./dist",
+        "removeComments": true,
+        "outFile": "./dist/lazyLoad.js"
+    },
+    "files": [
+        "../LazyLoad/LazyLoad.ts",
+        "MyElement.ts"
+    ]
+}

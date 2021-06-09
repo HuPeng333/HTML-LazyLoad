@@ -1,39 +1,37 @@
-type LazyLoadConstructor = {
+/// <reference path="./myElement.ts" />
+/// <reference path="interface.d.ts" />
+type LazyLoadData = {
     scrollElementSelector: Document | string,
-    lazyLoadElementsSelector: Array<string>,
+    lazyLoadElementsSelector: Array<string>, // id选择器数组
     onenter?: Function,
     onleave?: Function
 }
-class LazyLoad{
-    private readonly scrollElement: HTMLElement | Document// 滚动容器元素
-    private readonly lazyLoadElements: Array<Element> // 懒加载元素
+class LazyLoad implements LazyLoadFunction{
+    private readonly scrollElement: MyElement// 滚动容器元素
+    private readonly lazyLoadElements: Array<MyElement> // 懒加载元素
     private readonly onenter: Function | undefined
     private readonly onleave: Function | undefined
+    private enterFunction: Function | undefined
+    private isRunning:Boolean = false
 
-    constructor(LazyLoad: LazyLoadConstructor) {
+
+    constructor(LazyLoad: LazyLoadData) {
         // 搜索父元素
         if (typeof LazyLoad.scrollElementSelector === 'string') {
-            const scrollElement = document.getElementById(LazyLoad.scrollElementSelector)
+            const scrollElement = new MyElement(LazyLoad.scrollElementSelector)
             if (!scrollElement) {
                 throw new Error('没有找到滚动容器选择器对应的元素')
             }
             this.scrollElement = scrollElement
         } else {
-            this.scrollElement = document
+            this.scrollElement = new MyElement(document)
         }
 
         // 搜索懒加载元素
-        const lazyLoadElements: Array<Element> = []
-        LazyLoad.lazyLoadElementsSelector.forEach((value, index) => {
+        const lazyLoadElements: Array<MyElement> = []
+        LazyLoad.lazyLoadElementsSelector.forEach((value) => {
             // 遍历选择器数组
-            const nodeList = document.querySelectorAll(value)
-            if (nodeList.length === 0) {
-                console.warn('懒加载选择器中有无法找到的元素,索引: ' + index)
-            } else {
-                nodeList.forEach(value1 => {
-                    lazyLoadElements.push(value1)
-                })
-            }
+            lazyLoadElements.push(new MyElement(value))
         })
         if (lazyLoadElements.length === 0) {
             throw new Error('没有找到可用的懒加载元素')
@@ -47,34 +45,49 @@ class LazyLoad{
      * 开始监听
      */
     public start ():void {
-        console.log(this.scrollElement)
-        // 给父元素绑定滚动事件
-        this.scrollElement.addEventListener('scroll', () => {
-            this.lazyLoadElements.forEach(element => {
-                // @ts-ignore 懒加载元素到父元素顶部的距离
-                const elementOffsetTop  = element.offsetTop
-                if (this.scrollElement === document ) {
-                    // 非区域滚动
-                    if (elementOffsetTop - this.scrollElement.documentElement.scrollTop - window.innerHeight <= 0) {
-                        this.onenter ? this.onenter() : ''
+        if (!this.isRunning) {
+            this.isRunning = true
+            const enter = () => {
+                this.lazyLoadElements.forEach(value => {
+                    if (value.checkVisible(this.scrollElement)) {
+                        console.log('enter')
                     }
-                } else {
-                    // 区域滚动
-                    // @ts-ignore 父元素滚动条已滚动高度
-                    const scrollElementScrollTop = this.scrollElement.scrollTop
-                    // @ts-ignore 父元素可用高度
-                    const scrollElementHeight = this.scrollElement.offsetHeight
-                    console.log(elementOffsetTop, scrollElementScrollTop, scrollElementHeight)
-                    if (elementOffsetTop - scrollElementScrollTop - scrollElementHeight <= 0) {
-                    }
-                }
-            })
-        })
+                })
+            }
+            this.enterFunction = enter
+            if (this.scrollElement.isDocument) {
+                document.addEventListener('scroll', enter)
+            } else {
+                const rootElement = this.scrollElement.element
+                rootElement.addEventListener('scroll', enter)
+            }
+        } else {
+            console.warn('该监听已经在运行了,不允许重复调用 start()方法')
+        }
     }
 
     /**
      * 停止监听
      */
     public stop ():void{
+        if (this.scrollElement.isDocument) {
+            if (this.enterFunction) {
+                // @ts-ignore
+                document.removeEventListener('scroll', this.enterFunction)
+            }
+        } else {
+            if (this.enterFunction) {
+                // @ts-ignore
+                this.scrollElement.element.removeEventListener('scroll', this.enterFunction)
+            }
+        }
     }
+
+    /**
+     * 获取当前运行状态
+     */
+    public getRunningStatus(): Boolean {
+        return this.isRunning
+    }
+
 }
