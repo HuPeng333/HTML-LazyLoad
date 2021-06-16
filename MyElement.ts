@@ -1,10 +1,12 @@
 /// <reference path="interface.d.ts" />
 class MyElement implements MyElementFunction{
+
     public readonly element: Element
     private offsetTop: Number = 0 // 距离父元素顶部距离
     private scrollTop: Number = 0// 滚动条滚动距离
     private offsetHeight: Number = 0 // 元素高度
     public readonly isDocument: Boolean
+    private _isEnter:Boolean = false // 是否已经进入
     constructor (selector: String | Document) {
         if (typeof selector === 'string') {
             const element = document.querySelector(selector)
@@ -20,10 +22,18 @@ class MyElement implements MyElementFunction{
         }
     }
 
+    get isEnter(): Boolean {
+        return this._isEnter;
+    }
+
+    set isEnter(value: Boolean) {
+        this._isEnter = value;
+    }
+
     /**
      * 获取元素距离父元素顶部距离
      */
-    public getOffsetTop():Number {
+    public getOffsetTop():number {
         // @ts-ignore
         if (this.element.offsetTop) {
             // @ts-ignore
@@ -36,7 +46,7 @@ class MyElement implements MyElementFunction{
     /**
      * 获取元素滚动条滚动距离
      */
-    public getScrollTop():Number {
+    public getScrollTop():number {
         // @ts-ignore
         return this.element.scrollTop
     }
@@ -44,7 +54,7 @@ class MyElement implements MyElementFunction{
     /**
      * 获取元素最大可见高度
      */
-    public getOffsetHeight():Number {
+    public getOffsetHeight():number {
         // @ts-ignore
         return this.isDocument ? window.innerHeight : this.element.offsetHeight
     }
@@ -54,6 +64,12 @@ class MyElement implements MyElementFunction{
      * @param root {MyElement} 滑动根组件
      */
     public checkVisible(root: MyElement): Boolean {
-        return <number>this.getOffsetTop() - <number>root.getOffsetHeight() - <number>root.getScrollTop() <= 0
+        if (this.getOffsetTop() - root.getOffsetHeight() - root.getScrollTop() <= 0 && this.getOffsetHeight() + this.getOffsetTop() - root.getScrollTop() >= 0) {
+            return true
+        } else {
+            return false
+        }
     }
+
+
 }

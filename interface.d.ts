@@ -1,28 +1,36 @@
+type LazyLoadData = {
+    scrollElementSelector: Document | string
+    lazyLoadElementsSelector: Array<string> | String // id选择器数组
+    emitOnce: Boolean // 事件是否只触发一次(即只在刚好进入或离开时调用)
+    onenter?: Function
+    onleave?: Function
+}
+
 interface LazyLoadFunction {
-    /**
-     * 开始监听
-     *
-     *  -该方法不允许重复调用
-     */
-    start: () => void
+    // /**
+    //  * 开始监听
+    //  *
+    //  *  -该方法不允许重复调用
+    //  */
+    // start: () => void
 
-    /**
-     * 停止监听
-     *
-     *  -该方法不允许重复调用
-     */
-    stop: () => void
+    // /**
+    //  * 停止监听
+    //  *
+    //  *  -该方法不允许重复调用
+    //  */
+    // stop: () => void
 
-    /**
-     * 获取当前监听状态
-     *
-     * @return {Boolean} 运行状态
-     *
-     *  -true: 当前监听正在运行
-     *
-     *  -false: 当前监听没有运行
-     */
-    getRunningStatus: () => Boolean
+    // /**
+    //  * 获取当前监听状态
+    //  *
+    //  * @return {Boolean} 运行状态
+    //  *
+    //  *  -true: 当前监听正在运行
+    //  *
+    //  *  -false: 当前监听没有运行
+    //  */
+    // getRunningStatus: () => Boolean
 }
 
 interface MyElementFunction {

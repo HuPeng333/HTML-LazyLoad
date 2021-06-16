@@ -8,7 +8,7 @@
         "outFile": "./dist/lazyLoad.js"
     },
     "files": [
-        "../LazyLoad/LazyLoad.ts",
+        "LazyLoad.ts",
         "MyElement.ts"
     ]
 }
