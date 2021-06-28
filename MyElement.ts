@@ -1,6 +1,4 @@
-/// <reference path="interface.d.ts" />
-class MyElement implements MyElementFunction{
-
+class MyElement{
     public readonly element: Element
     private offsetTop: Number = 0 // 距离父元素顶部距离
     private scrollTop: Number = 0// 滚动条滚动距离
@@ -60,16 +58,12 @@ class MyElement implements MyElementFunction{
     }
 
     /**
-     * 检查元素当前是否可见
+     * 返回当前元素相对于窗口的可见百分比
+     * 无法返回退出时的百分比
      * @param root {MyElement} 滑动根组件
      */
-    public checkVisible(root: MyElement): Boolean {
-        if (this.getOffsetTop() - root.getOffsetHeight() - root.getScrollTop() <= 0 && this.getOffsetHeight() + this.getOffsetTop() - root.getScrollTop() >= 0) {
-            return true
-        } else {
-            return false
-        }
+    public checkVisible(root: MyElement): number {
+        let total = this.getOffsetHeight() > root.getOffsetHeight() ? root.getOffsetHeight() : this.getOffsetHeight();
+        return ( root.getScrollTop() + root.getOffsetHeight() - this.getOffsetTop()) / total
     }
-
-
 }

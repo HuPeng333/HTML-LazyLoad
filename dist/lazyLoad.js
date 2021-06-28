@@ -1,4 +1,57 @@
 "use strict";
+class LazyLoad {
+    constructor(data) {
+        this.isenter = false;
+        this.emitOnce = data.emitOnce;
+        if (typeof data.scrollElementSelector === 'string') {
+            const scrollElement = new MyElement(data.scrollElementSelector);
+            if (!scrollElement) {
+                throw new Error('没有找到滚动容器选择器对应的元素');
+            }
+            this.scrollElement = scrollElement;
+        }
+        else {
+            this.scrollElement = new MyElement(document);
+        }
+        if (Array.isArray(data.lazyLoadElementsSelector)) {
+            const lazyLoadElements = [];
+            data.lazyLoadElementsSelector.forEach((value) => {
+                lazyLoadElements.push(new MyElement(value));
+            });
+            if (lazyLoadElements.length === 0) {
+                throw new Error('没有找到可用的懒加载元素');
+            }
+            this.lazyLoadElements = lazyLoadElements;
+        }
+        else {
+            this.lazyLoadElements = [new MyElement(data.lazyLoadElementsSelector)];
+        }
+        this.listener = data.listener;
+        this.start();
+    }
+    checkEnter() {
+        const that = this;
+        this.lazyLoadElements.forEach(value => {
+            if (that.listener) {
+                that.listener(value.checkVisible(that.scrollElement), value.element);
+            }
+        });
+    }
+    start() {
+        const that = this;
+        if (this.scrollElement.isDocument) {
+            document.addEventListener('scroll', (e) => {
+                that.checkEnter();
+            });
+        }
+        else {
+            const rootElement = this.scrollElement.element;
+            rootElement.addEventListener('scroll', (e) => {
+                that.checkEnter();
+            });
+        }
+    }
+}
 class MyElement {
     constructor(selector) {
         this.offsetTop = 0;
@@ -41,74 +94,7 @@ class MyElement {
         return this.isDocument ? window.innerHeight : this.element.offsetHeight;
     }
     checkVisible(root) {
-        if (this.getOffsetTop() - root.getOffsetHeight() - root.getScrollTop() <= 0 && this.getOffsetHeight() + this.getOffsetTop() - root.getScrollTop() >= 0) {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-}
-class LazyLoad {
-    constructor(data) {
-        this.isenter = false;
-        this.emitOnce = data.emitOnce;
-        if (typeof data.scrollElementSelector === 'string') {
-            const scrollElement = new MyElement(data.scrollElementSelector);
-            if (!scrollElement) {
-                throw new Error('没有找到滚动容器选择器对应的元素');
-            }
-            this.scrollElement = scrollElement;
-        }
-        else {
-            this.scrollElement = new MyElement(document);
-        }
-        if (Array.isArray(data.lazyLoadElementsSelector)) {
-            const lazyLoadElements = [];
-            data.lazyLoadElementsSelector.forEach((value) => {
-                lazyLoadElements.push(new MyElement(value));
-            });
-            if (lazyLoadElements.length === 0) {
-                throw new Error('没有找到可用的懒加载元素');
-            }
-            this.lazyLoadElements = lazyLoadElements;
-        }
-        else {
-            this.lazyLoadElements = [new MyElement(data.lazyLoadElementsSelector)];
-        }
-        this.onenter = data.onenter;
-        this.onleave = data.onleave;
-        this.start();
-    }
-    checkEnter() {
-        const that = this;
-        this.lazyLoadElements.forEach(value => {
-            if (value.checkVisible(this.scrollElement)) {
-                if (that.emitOnce && value.isEnter)
-                    return;
-                this.onenter ? this.onenter() : '';
-                value.isEnter = true;
-            }
-            else {
-                if (that.emitOnce && !value.isEnter)
-                    return;
-                this.onleave ? this.onleave() : '';
-                value.isEnter = false;
-            }
-        });
-    }
-    start() {
-        const that = this;
-        if (this.scrollElement.isDocument) {
-            document.addEventListener('scroll', (e) => {
-                that.checkEnter();
-            });
-        }
-        else {
-            const rootElement = this.scrollElement.element;
-            rootElement.addEventListener('scroll', (e) => {
-                that.checkEnter();
-            });
-        }
+        let total = this.getOffsetHeight() > root.getOffsetHeight() ? root.getOffsetHeight() : this.getOffsetHeight();
+        return (root.getScrollTop() + root.getOffsetHeight() - this.getOffsetTop()) / total;
     }
 }
